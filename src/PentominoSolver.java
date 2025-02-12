@@ -4,6 +4,9 @@ import java.awt.event.*;
 
 public class PentominoSolver extends JPanel{
 
+    Board board;
+    PieceStack pieces;
+
     public PentominoSolver() {
         setPreferredSize(new Dimension(800, 600));
         setLayout(null);
@@ -49,6 +52,10 @@ public class PentominoSolver extends JPanel{
             window.pack();
             window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
             window.setVisible(true);
+
+            app.board = new Board(10, 6);
+            app.pieces = new PieceStack();
+            app.board.placePiece(0, 0, app.pieces.getPiece()[0]);
         });
     }
 
@@ -59,6 +66,7 @@ public class PentominoSolver extends JPanel{
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
+        board.draw(g, 0, 0, 50, 3);
 
         JFrame topFrame = (JFrame) SwingUtilities.getWindowAncestor(this);
     }
