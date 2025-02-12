@@ -1,11 +1,10 @@
-import java.util.Collections;
 import java.util.ArrayList;
-import java.util.List;
-import java.util.Stack;
+import java.util.Random;
 
 public class PieceStack {
 
-    private Stack<char[][][]> pieces;
+    private ArrayList<char[][][]> pieces;
+    private Random random;
 
     private char[][][][] shapes = {
         {
@@ -135,25 +134,37 @@ public class PieceStack {
     };
 
     public PieceStack() {
-        pieces = new Stack<>();
+        pieces = new ArrayList<>();
+        random = new Random();
         reset();
     }
 
     public char[][][] getPiece() {
-        return pieces.pop();
+        int index = random.nextInt(pieces.size());
+        return pieces.remove(index);
+    }
+
+    public void addPiece(char piece) {
+        for (char[][][] shape : shapes) {
+
+            for (char[][] variant : shape) {
+
+                for (char[] row : variant) {
+                    for (char cell : row) {
+
+                        if (cell == piece) {
+                            pieces.add(shape);
+                            return;
+                        }
+                    }
+                }
+            }
+        }
     }
 
     public void reset() {
-        List<char[][][]> tempList = new ArrayList<>();
-
         for (char[][][] shapeVariants : shapes) {
-            tempList.add(shapeVariants);
-        }
-        Collections.shuffle(tempList);
-
-        pieces.clear();
-        for (char[][][] shape : tempList) {
-            pieces.push(shape);
+            pieces.add(shapeVariants);
         }
     }
 }

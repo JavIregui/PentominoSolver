@@ -7,7 +7,7 @@ app_icon=$(grep "app.icon" app.config | cut -d'=' -f2)
 mkdir -p dist
 
 javac -d bin src/*.java || { echo "Error compiling Java"; exit 1; }
-jar --create --file="dist/$app_name.jar" --main-class="$app_name" -C bin . || { echo "Error creating JAR"; exit 1; }
+jar --create --file="dist/App.jar" --main-class="App" -C bin . || { echo "Error creating JAR"; exit 1; }
 
 # FOR MACOS BUILD
 #################################
@@ -21,8 +21,8 @@ fi
 
 jpackage --name "$app_name" \
          --input . \
-         --main-jar "$app_name.jar" \
-         --main-class "$app_name" \
+         --main-jar "App.jar" \
+         --main-class "App" \
          --type dmg \
          --app-version "$app_version" \
          --icon "../$app_icon" \
@@ -33,8 +33,8 @@ jpackage --name "$app_name" \
 
 # jpackage --name "$app_name" \
 #          --input . \
-#          --main-jar "$app_name.jar" \
-#          --main-class "$app_name" \
+#          --main-jar "App.jar" \
+#          --main-class "App" \
 #          --type exe \
 #          --app-version "$app_version" \
 #          --icon "../$app_icon"
