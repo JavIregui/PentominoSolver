@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.awt.*;
 
 public class App {
     public static void main(String[] args) {
@@ -7,10 +8,11 @@ public class App {
             configLookAndFeel();
             JFrame window = createWindow();
 
-            PentominoSolver app = new PentominoSolver(6, 10);
+            PentominoSolver app = new PentominoSolver(6, 10, 60);
             window.add(app);
 
             configWindow(window, app);
+            
         });
     }
 
@@ -34,10 +36,14 @@ public class App {
 
     private static void configWindow(JFrame window, PentominoSolver app) {
         window.setJMenuBar(createMenuBar(app));
+
         window.setIconImage(new ImageIcon("../media/icon.png").getImage());
+
         window.setResizable(true);
-        window.pack();
+        setLimits(window, app);
+
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+
         window.setVisible(true);
     }
 
@@ -45,5 +51,30 @@ public class App {
         JMenuBar menuBar = new JMenuBar();
         // Añade aquí los elementos del menú
         return menuBar;
+    }
+
+    public static void setLimits(JFrame window, PentominoSolver app) {
+        switch (app.getWidth()) {
+            case 12:
+                window.setMinimumSize(new Dimension(500, 325));
+                window.setMaximumSize(new Dimension(920, 500));
+                window.pack();
+                
+                break;
+
+            case 15:
+                window.setMinimumSize(new Dimension(575, 300));
+                window.setMaximumSize(new Dimension(1100, 440));
+                window.pack();
+                
+                break;
+        
+            default:
+                window.setMinimumSize(new Dimension(450, 350));
+                window.setMaximumSize(new Dimension(800, 560));
+                window.pack();
+
+                break;
+        }
     }
 }
