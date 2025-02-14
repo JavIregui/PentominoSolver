@@ -49,6 +49,25 @@ public class PentominoSolver extends JPanel {
         } else {
             cellSize = (window.getHeight() - 200) / board.getHeight();
         }
+            
+
+        // if(!resizing){
+        //     resizing = true;
+
+        //     JFrame window = (JFrame) SwingUtilities.getWindowAncestor(this);
+
+        //     if(window.getWidth() - 200 < window.getHeight() - 200){
+        //         cellSize = (window.getWidth() - 200) / board.getWidth();
+        //     } else {
+        //         cellSize = (window.getHeight() - 200) / board.getHeight();
+        //     }
+            
+        //     setPreferredSize(new Dimension(cellSize * board.getWidth() + 200, cellSize * board.getHeight() + 200));
+        //     window.pack();
+        // }
+        // else {
+        //     resizing = false;
+        // }
         
     }
 
