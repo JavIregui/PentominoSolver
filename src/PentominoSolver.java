@@ -9,6 +9,8 @@ public class PentominoSolver extends JPanel {
     private int cellSize = 60;
 
     private boolean resizing = false;
+    private Timer resizeTimer;
+    private static final int RESIZE_DELAY_MS = 100;
 
     public PentominoSolver(int row, int col, int cellSize) {
         if(cellSize <= 60 || cellSize >= 25){
@@ -35,40 +37,58 @@ public class PentominoSolver extends JPanel {
         addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
-                onWindowResized();
+                scheduleWindowAdjustment();
             }
         });
     }
 
-    private void onWindowResized() {
-
-        JFrame window = (JFrame) SwingUtilities.getWindowAncestor(this);
-
-        if(window.getWidth()< window.getHeight()){
-            cellSize = (window.getWidth() - 200) / board.getWidth();
-        } else {
-            cellSize = (window.getHeight() - 200) / board.getHeight();
+    private void scheduleWindowAdjustment() {
+        if (resizeTimer != null) {
+            resizeTimer.stop();
         }
-            
-
-        // if(!resizing){
-        //     resizing = true;
-
-        //     JFrame window = (JFrame) SwingUtilities.getWindowAncestor(this);
-
-        //     if(window.getWidth() - 200 < window.getHeight() - 200){
-        //         cellSize = (window.getWidth() - 200) / board.getWidth();
-        //     } else {
-        //         cellSize = (window.getHeight() - 200) / board.getHeight();
-        //     }
-            
-        //     setPreferredSize(new Dimension(cellSize * board.getWidth() + 200, cellSize * board.getHeight() + 200));
-        //     window.pack();
-        // }
-        // else {
-        //     resizing = false;
-        // }
         
+        resizeTimer = new Timer(RESIZE_DELAY_MS, e -> adjustWindowSize());
+        resizeTimer.setRepeats(false);
+        resizeTimer.start();
+    }
+
+    private void adjustWindowSize() {
+        if (!resizing) {
+            resizing = true;
+            
+            SwingUtilities.invokeLater(() -> {
+                JFrame window = (JFrame) SwingUtilities.getWindowAncestor(this);
+                
+                int currentWidth = window.getWidth();
+                int currentHeight = window.getHeight();
+                
+                int availableWidth = currentWidth - 200;
+                int availableHeight = currentHeight - 200;
+                
+                int cellSizeW = availableWidth / board.getWidth();
+                int cellSizeH = availableHeight / board.getHeight();
+                int newCellSize = Math.min(cellSizeW, cellSizeH);
+                newCellSize = Math.max(newCellSize, 1);
+                
+                int desiredWidth = board.getWidth() * newCellSize + 200;
+                int desiredHeight = board.getHeight() * newCellSize + 200;
+                
+                Dimension minSize = window.getMinimumSize();
+                Dimension maxSize = window.getMaximumSize();
+                
+                desiredWidth = Math.max(minSize.width, Math.min(desiredWidth, maxSize.width));
+                desiredHeight = Math.max(minSize.height, Math.min(desiredHeight, maxSize.height));
+                
+                if (desiredWidth != currentWidth || desiredHeight != currentHeight) {
+                    window.setSize(desiredWidth, desiredHeight);
+                    window.validate(); 
+                }
+                
+                cellSize = newCellSize;
+                repaint();
+                resizing = false;
+            });
+        }
     }
 
     @Override
