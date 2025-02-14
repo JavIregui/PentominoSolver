@@ -30,51 +30,64 @@ public class App {
     }
 
     private static JFrame createWindow() {
-        JFrame window = new JFrame("Pentomino Solver");
-        return window;
+        return new JFrame("Pentomino Solver");
     }
 
     private static void configWindow(JFrame window, PentominoSolver app) {
         window.setJMenuBar(createMenuBar(app));
-
         window.setIconImage(new ImageIcon("../media/icon.png").getImage());
-
         window.setResizable(true);
         setLimits(window, app);
-
         window.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        window.pack();
+        window.setLocationRelativeTo(null);
 
         window.setVisible(true);
     }
 
     private static JMenuBar createMenuBar(PentominoSolver app) {
         JMenuBar menuBar = new JMenuBar();
-        // Añade aquí los elementos del menú
+        
+        JMenu solveMenu = new JMenu("Resolver");
+        JMenuItem startItem = new JMenuItem("Iniciar solución");
+        JCheckBoxMenuItem autoModeItem = new JCheckBoxMenuItem("Modo automático");
+        
+        startItem.addActionListener(e -> app.startSolving());
+        autoModeItem.addItemListener(e -> {
+            app.setAutoMode(autoModeItem.isSelected());
+            if (autoModeItem.isSelected()) app.startSolving();
+        });
+        
+        solveMenu.add(startItem);
+        solveMenu.addSeparator();
+        solveMenu.add(autoModeItem);
+        menuBar.add(solveMenu);
+        
         return menuBar;
     }
 
     public static void setLimits(JFrame window, PentominoSolver app) {
-        switch (app.getWidth()) {
+        int widthType = app.getBoardWidth();
+        Dimension minSize = new Dimension();
+        Dimension maxSize = new Dimension();
+
+        switch (widthType) {
             case 12:
-                window.setMinimumSize(new Dimension(500, 325));
-                window.setMaximumSize(new Dimension(920, 500));
-                window.pack();
-                
+                minSize.setSize(500, 325);
+                maxSize.setSize(920, 500);
                 break;
-
             case 15:
-                window.setMinimumSize(new Dimension(575, 300));
-                window.setMaximumSize(new Dimension(1100, 440));
-                window.pack();
-                
+                minSize.setSize(575, 300);
+                maxSize.setSize(1100, 440);
                 break;
-        
             default:
-                window.setMinimumSize(new Dimension(450, 350));
-                window.setMaximumSize(new Dimension(800, 560));
-                window.pack();
-
+                minSize.setSize(450, 350);
+                maxSize.setSize(800, 560);
                 break;
         }
+
+        window.setMinimumSize(minSize);
+        window.setMaximumSize(maxSize);
+        window.pack();
     }
 }

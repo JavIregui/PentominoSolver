@@ -11,6 +11,8 @@
 
 ## Future Features
 
+- Menu that allows the user to set pieces and create an initial state for the algorithm to work with.
+
 At the moment, there are no plans to introduce any new features.
 
 ## Requirements

@@ -30,33 +30,46 @@ public class Board {
     public char getCell(int row, int col) {
         return grid[row][col];
     }
-    private void setCell(int row, int col, char piece) {
-        grid[row][col] = piece;
-    }
 
     public boolean placePiece(int row, int col, char[][] piece) {
-
-        for (int i = 0; i < piece.length; ++i) {
-            for (int j = 0; j < piece[i].length; ++j) {
-
+        for (int i = 0; i < piece.length; i++) {
+            for (int j = 0; j < piece[i].length; j++) {
                 if (piece[i][j] != '0') {
                     int gridRow = row + i;
                     int gridCol = col + j;
-
-                    if (gridRow < 0 || gridRow >= height || gridCol < 0 || gridCol >= width) {
+                    
+                    if (gridRow < 0 || gridRow >= height || 
+                        gridCol < 0 || gridCol >= width || 
+                        grid[gridRow][gridCol] != '0') {
                         return false;
-                    }
-
-                    if (grid[gridRow][gridCol] != '0') {
-                        return false;
-                    } else {
-                        setCell(gridRow, gridCol, piece[i][j]);
                     }
                 }
             }
         }
 
+        for (int i = 0; i < piece.length; i++) {
+            for (int j = 0; j < piece[i].length; j++) {
+                if (piece[i][j] != '0') {
+                    grid[row + i][col + j] = piece[i][j];
+                }
+            }
+        }
         return true;
+    }
+
+    public void unplacePiece(int row, int col, char[][] piece) {
+        for (int i = 0; i < piece.length; i++) {
+            for (int j = 0; j < piece[i].length; j++) {
+                if (piece[i][j] != '0') {
+                    int gridRow = row + i;
+                    int gridCol = col + j;
+                    if (gridRow >= 0 && gridRow < height && 
+                        gridCol >= 0 && gridCol < width) {
+                        grid[gridRow][gridCol] = '0';
+                    }
+                }
+            }
+        }
     }
 
     public boolean solvable() {
@@ -116,76 +129,39 @@ public class Board {
     }
 
     public void draw(Graphics g, int posX, int posY, int cellSize, int gutter) {
-        Graphics2D g2 = (Graphics2D) g;
-        g2.setStroke(new BasicStroke(gutter));
+        Graphics2D g2d = (Graphics2D) g;
+        g2d.setStroke(new BasicStroke(gutter));
 
         for (int row = 0; row < height; row++) {
             for (int col = 0; col < width; col++) {
                 int x = posX + col * cellSize;
                 int y = posY + row * cellSize;
-    
-                if (grid[row][col] == '0') {
-                    g2.setColor(new Color(0xFFFFFF));
-                } else {
-                    switch (grid[row][col]) {
-                        case 'i':
-                            g2.setColor(new Color(0xEEAAAA));
-                            break;
-
-                        case 'f':
-                            g2.setColor(new Color(0xDDBB99));
-                            break;
-                            
-                        case 'l':
-                            g2.setColor(new Color(0xCCCC88));
-                            break;
-
-                        case 'p':
-                            g2.setColor(new Color(0xBBDD99));
-                            break;
-
-                        case 'n':
-                            g2.setColor(new Color(0xAAEEAA));
-                            break;
-
-                        case 't':
-                            g2.setColor(new Color(0x99DDBB));
-                            break;
-
-                        case 'u':
-                            g2.setColor(new Color(0x88CCCC));
-                            break;
-
-                        case 'v':
-                            g2.setColor(new Color(0x99BBDD));
-                            break;
-
-                        case 'w':
-                            g2.setColor(new Color(0xAAAAEE));
-                            break;
-
-                        case 'x':
-                            g2.setColor(new Color(0xBB99DD));
-                            break;
-
-                        case 'y':
-                            g2.setColor(new Color(0xCC88CC));
-                            break;
-
-                        case 'z':
-                            g2.setColor(new Color(0xDD99BB));
-                            break;
-                    
-                        default:
-                            g2.setColor(new Color(0x000000));
-                            break;
-                    }
-                }
-    
-                g2.fillRect(x, y, cellSize, cellSize);
-                g2.setColor(new Color(0x808080));
-                g2.drawRect(x, y, cellSize, cellSize);
+                
+                setCellColor(g2d, grid[row][col]);
+                g2d.fillRect(x, y, cellSize, cellSize);
+                
+                g2d.setColor(new Color(0x808080));
+                g2d.drawRect(x, y, cellSize, cellSize);
             }
+        }
+    }
+
+    private void setCellColor(Graphics2D g2d, char piece) {
+        switch (piece) {
+            case '0' -> g2d.setColor(new Color(0xFFFFFF));
+            case 'i' -> g2d.setColor(new Color(0xEEAAAA));
+            case 'f' -> g2d.setColor(new Color(0xDDBB99));
+            case 'l' -> g2d.setColor(new Color(0xCCCC88));
+            case 'p' -> g2d.setColor(new Color(0xBBDD99));
+            case 'n' -> g2d.setColor(new Color(0xAAEEAA));
+            case 't' -> g2d.setColor(new Color(0x99DDBB));
+            case 'u' -> g2d.setColor(new Color(0x88CCCC));
+            case 'v' -> g2d.setColor(new Color(0x99BBDD));
+            case 'w' -> g2d.setColor(new Color(0xAAAAEE));
+            case 'x' -> g2d.setColor(new Color(0xBB99DD));
+            case 'y' -> g2d.setColor(new Color(0xCC88CC));
+            case 'z' -> g2d.setColor(new Color(0xDD99BB));
+            default -> g2d.setColor(Color.BLACK);
         }
     }
 }
