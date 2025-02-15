@@ -4,12 +4,15 @@ import java.awt.event.*;
 import java.util.Stack;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 public class PentominoSolver extends JPanel {
     private Board board;
     private List<List<char[][]>> allOrientations;
     private Stack<Placement> placementStack = new Stack<>();
+    private List<Integer> pieceOrder;
+    private int currentOrderIndex;
     private int currentPieceIndex = 0;
     private int currentOrientationIndex = 0;
     private int currentRow = 0;
@@ -125,25 +128,35 @@ public class PentominoSolver extends JPanel {
     public void startSolving() {
         solving = true;
         solutionFound = false;
-        currentPieceIndex = 0;
+        
+        // Generar nuevo orden aleatorio de piezas
+        pieceOrder = new ArrayList<>();
+        for (int i = 0; i < allOrientations.size(); i++) {
+            pieceOrder.add(i);
+        }
+        Collections.shuffle(pieceOrder);
+        
+        currentOrderIndex = 0;
         currentOrientationIndex = 0;
         currentRow = 0;
         currentCol = 0;
         placementStack.clear();
         board.reset();
-        repaint();
+        
         if (autoMode) {
             autoTimer.start();
         }
+        repaint();
     }
 
     public void nextStep() {
-        if (solutionFound || currentPieceIndex >= allOrientations.size()) {
-            autoTimer.stop();
+        if (solutionFound || currentOrderIndex >= pieceOrder.size()) {
+            if (autoMode) autoTimer.stop();
             return;
         }
 
-        List<char[][]> orientations = allOrientations.get(currentPieceIndex);
+        int currentPiece = pieceOrder.get(currentOrderIndex);
+        List<char[][]> orientations = allOrientations.get(currentPiece);
 
         while (currentOrientationIndex < orientations.size()) {
             char[][] orientation = orientations.get(currentOrientationIndex);
@@ -151,21 +164,22 @@ public class PentominoSolver extends JPanel {
                 while (currentCol < board.getWidth()) {
                     if (tryPlacePiece(currentRow, currentCol, orientation)) {
                         placementStack.push(new Placement(
-                            currentPieceIndex, 
-                            currentOrientationIndex, 
-                            currentRow, 
-                            currentCol, 
-                            orientation
-                        ));
+                        currentOrderIndex,               
+                        currentPiece,                     
+                        currentOrientationIndex, 
+                        currentRow, 
+                        currentCol, 
+                        orientation
+                    ));
                         
-                        currentPieceIndex++;
+                        currentOrderIndex++;
                         currentOrientationIndex = 0;
                         currentRow = 0;
                         currentCol = 0;
                         
                         repaint();
                         
-                        if (currentPieceIndex == allOrientations.size()) {
+                        if (currentOrderIndex == pieceOrder.size()) {
                             solutionFound = true;
                             JOptionPane.showMessageDialog(this, "¡Solución encontrada!");
                         }
@@ -202,7 +216,7 @@ public class PentominoSolver extends JPanel {
         if (!placementStack.isEmpty()) {
             Placement last = placementStack.pop();
             board.unplacePiece(last.row, last.col, last.orientation);
-            currentPieceIndex = last.pieceIndex;
+            currentOrderIndex = last.orderIndex;  // Restaurar orderIndex
             currentOrientationIndex = last.orientationIndex + 1;
             currentRow = last.row;
             currentCol = last.col;
@@ -223,13 +237,15 @@ public class PentominoSolver extends JPanel {
     }
 
     private class Placement {
+        int orderIndex;
         int pieceIndex;
         int orientationIndex;
         int row;
         int col;
         char[][] orientation;
 
-        public Placement(int pieceIndex, int orientationIndex, int row, int col, char[][] orientation) {
+        public Placement(int orderIndex, int pieceIndex, int orientationIndex, int row, int col, char[][] orientation) {
+            this.orderIndex = orderIndex;
             this.pieceIndex = pieceIndex;
             this.orientationIndex = orientationIndex;
             this.row = row;

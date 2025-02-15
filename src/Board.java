@@ -120,6 +120,24 @@ public class Board {
         return size;
     }
 
+    public boolean isValidPlacement(int row, int col, char[][] piece) {
+        for (int i = 0; i < piece.length; i++) {
+            for (int j = 0; j < piece[i].length; j++) {
+                if (piece[i][j] != '0') {
+                    int gridRow = row + i;
+                    int gridCol = col + j;
+                    
+                    if (gridRow < 0 || gridRow >= height || 
+                        gridCol < 0 || gridCol >= width || 
+                        grid[gridRow][gridCol] != '0') {
+                        return false;
+                    }
+                }
+            }
+        }
+        return true;
+    }
+
     public void reset() {
         for (int i = 0; i < height; i++) {
             for (int j = 0; j < width; j++) {

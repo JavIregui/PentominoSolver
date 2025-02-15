@@ -1,4 +1,6 @@
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.Random;
 
 public class PieceStack {
@@ -174,6 +176,15 @@ public class PieceStack {
             }
         }
         return false;
+    }
+
+    public char[][][] getRandomPiece() {
+        if (pieces.isEmpty()) return null;
+        return pieces.remove(random.nextInt(pieces.size()));
+    }
+
+    public void shufflePieces() {
+        Collections.shuffle(Arrays.asList(shapes));
     }
 
     public void reset() {
