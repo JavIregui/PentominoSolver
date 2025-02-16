@@ -13,7 +13,6 @@ public class PentominoSolver extends JPanel {
     private Stack<Placement> placementStack = new Stack<>();
     private List<Integer> pieceOrder;
     private int currentOrderIndex;
-    private int currentPieceIndex = 0;
     private int currentOrientationIndex = 0;
     private int currentRow = 0;
     private int currentCol = 0;
@@ -238,7 +237,6 @@ public class PentominoSolver extends JPanel {
 
     private class Placement {
         int orderIndex;
-        int pieceIndex;
         int orientationIndex;
         int row;
         int col;
@@ -246,7 +244,6 @@ public class PentominoSolver extends JPanel {
 
         public Placement(int orderIndex, int pieceIndex, int orientationIndex, int row, int col, char[][] orientation) {
             this.orderIndex = orderIndex;
-            this.pieceIndex = pieceIndex;
             this.orientationIndex = orientationIndex;
             this.row = row;
             this.col = col;
