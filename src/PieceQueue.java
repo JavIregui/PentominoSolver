@@ -1,13 +1,12 @@
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collections;
-import java.util.Random;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Queue;
 
-public class PieceStack {
-    private ArrayList<char[][][]> pieces;
-    private Random random;
+public class PieceQueue {
+    private Queue<Piece> pieces;
     
-    // Formas de las piezas con sus variantes (reflejos)
     private final char[][][][] shapes = {
         // F
         {
@@ -144,53 +143,36 @@ public class PieceStack {
         }
     };
 
-    public PieceStack() {
-        pieces = new ArrayList<>();
-        random = new Random();
+    public PieceQueue() {
+        pieces = new LinkedList<>();
         reset();
     }
 
-    public char[][][][] getAllShapes() {
-        return shapes.clone();
+    public Piece getNextPiece() {
+        return pieces.isEmpty() ? null : pieces.poll();
     }
 
-    public char[][][] getPiece() {
-        return pieces.remove(random.nextInt(pieces.size()));
+    public void addPiece(Piece piece) {
+        pieces.offer(piece);
     }
 
-    public void addPiece(char piece) {
-        for (char[][][] shape : shapes) {
-            for (char[][] variant : shape) {
-                if (containsPiece(variant, piece)) {
-                    pieces.add(shape);
-                    return;
-                }
-            }
-        }
+    public boolean isEmpty() {
+        return pieces.isEmpty();
     }
 
-    private boolean containsPiece(char[][] variant, char target) {
-        for (char[] row : variant) {
-            for (char c : row) {
-                if (c == target) return true;
-            }
-        }
-        return false;
-    }
-
-    public char[][][] getRandomPiece() {
-        if (pieces.isEmpty()) return null;
-        return pieces.remove(random.nextInt(pieces.size()));
-    }
-
-    public void shufflePieces() {
-        Collections.shuffle(Arrays.asList(shapes));
+    public int size() {
+        return pieces.size();
     }
 
     public void reset() {
         pieces.clear();
+        
+        List<Piece> pieceList = new ArrayList<>();
         for (char[][][] shape : shapes) {
-            pieces.add(shape);
+            pieceList.add(new Piece(shape));
         }
+        Collections.shuffle(pieceList);
+
+        pieces.addAll(pieceList);
     }
 }

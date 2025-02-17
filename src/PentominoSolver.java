@@ -2,22 +2,12 @@ import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
 import java.util.Stack;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
 
 public class PentominoSolver extends JPanel {
+
     private Board board;
-    private List<List<char[][]>> allOrientations;
-    private Stack<Placement> placementStack = new Stack<>();
-    private List<Integer> pieceOrder;
-    private int currentOrderIndex;
-    private int currentOrientationIndex = 0;
-    private int currentRow = 0;
-    private int currentCol = 0;
-    private boolean solving = false;
-    private boolean solutionFound = false;
+    private PieceQueue pieces;
+    private Stack<Piece> placed;
 
     private int cellSize = 60;
     private final int gutter = 3;
@@ -26,18 +16,23 @@ public class PentominoSolver extends JPanel {
     private Timer resizeTimer;
     private static final int RESIZE_DELAY_MS = 100;
 
-    private boolean autoMode = false;
     private Timer autoTimer;
-    private static final int AUTO_DELAY_MS = 1;
+    private static final int AUTO_DELAY_MS = 250;
+    private boolean solving;
 
     public PentominoSolver(int row, int col, int cellSize) {
+        if (row * col != 60) {
+            throw new IllegalArgumentException("Board size is not valid");
+        }
+
         if(cellSize <= 60 || cellSize >= 25){
             this.cellSize = cellSize;
         }
+
+        this.solving = false;
         
         initComponents(row, col);
         configEvents();
-        initOrientations();
         initAutoTimer();
     }
 
@@ -47,6 +42,8 @@ public class PentominoSolver extends JPanel {
         setFocusable(true);
 
         board = new Board(col, row);
+        pieces = new PieceQueue();
+        placed = new Stack<>();
     }
 
     private void configEvents() {
@@ -56,58 +53,11 @@ public class PentominoSolver extends JPanel {
                 scheduleWindowAdjustment();
             }
         });
-
-        addKeyListener(new KeyAdapter() {
-            @Override
-            public void keyPressed(KeyEvent e) {
-                if (e.getKeyCode() == KeyEvent.VK_SPACE && solving && !autoMode) {
-                    nextStep();
-                }
-            }
-        });
-    }
-
-    private void initOrientations() {
-        allOrientations = new ArrayList<>();
-        PieceStack tempStack = new PieceStack();
-        char[][][][] allShapes = tempStack.getAllShapes();
-        
-        for (char[][][] shapeVariants : allShapes) {
-            List<char[][]> orientationsForShape = new ArrayList<>();
-            for (char[][] variant : shapeVariants) {
-                orientationsForShape.addAll(generateRotations(variant));
-            }
-            allOrientations.add(orientationsForShape);
-        }
-    }
-
-    public static List<char[][]> generateRotations(char[][] piece) {
-        List<char[][]> rotations = new ArrayList<>();
-        char[][] current = piece;
-        
-        for (int i = 0; i < 4; i++) {
-            rotations.add(current);
-            current = rotateClockwise(current);
-            if (Arrays.deepEquals(current, piece)) break;
-        }
-        return rotations;
-    }
-
-    private static char[][] rotateClockwise(char[][] piece) {
-        int rows = piece.length;
-        int cols = piece[0].length;
-        char[][] rotated = new char[cols][rows];
-        for (int i = 0; i < rows; i++) {
-            for (int j = 0; j < cols; j++) {
-                rotated[j][rows - 1 - i] = piece[i][j];
-            }
-        }
-        return rotated;
     }
 
     private void initAutoTimer() {
         autoTimer = new Timer(AUTO_DELAY_MS, e -> {
-            if (solving && !solutionFound) {
+            if (solving) {
                 nextStep();
             } else {
                 autoTimer.stop();
@@ -115,140 +65,49 @@ public class PentominoSolver extends JPanel {
         });
     }
 
-    public void setAutoMode(boolean enabled) {
-        this.autoMode = enabled;
-        if (autoMode && solving) {
-            autoTimer.start();
-        } else {
-            autoTimer.stop();
-        }
-    }
-
     public void startSolving() {
         solving = true;
-        solutionFound = false;
-        
-        // Generar nuevo orden aleatorio de piezas
-        pieceOrder = new ArrayList<>();
-        for (int i = 0; i < allOrientations.size(); i++) {
-            pieceOrder.add(i);
-        }
-        Collections.shuffle(pieceOrder);
-        
-        currentOrderIndex = 0;
-        currentOrientationIndex = 0;
-        currentRow = 0;
-        currentCol = 0;
-        placementStack.clear();
-        board.reset();
-        
-        if (autoMode) {
-            autoTimer.start();
-        }
-        repaint();
+        autoTimer.start();
     }
 
-    public void nextStep() {
-        if (solutionFound || currentOrderIndex >= pieceOrder.size()) {
-            if (autoMode) autoTimer.stop();
+    public void stopSolving() {
+        solving = false;
+    }
+
+    private void nextStep() {
+        if (pieces.isEmpty()) {
+            solving = false;
+            autoTimer.stop();
+            JOptionPane.showMessageDialog(this, "¡Solución encontrada!");
             return;
         }
 
-        int currentPiece = pieceOrder.get(currentOrderIndex);
-        List<char[][]> orientations = allOrientations.get(currentPiece);
-
-        while (currentOrientationIndex < orientations.size()) {
-            char[][] orientation = orientations.get(currentOrientationIndex);
-            while (currentRow < board.getHeight()) {
-                while (currentCol < board.getWidth()) {
-                    if (tryPlacePiece(currentRow, currentCol, orientation)) {
-                        placementStack.push(new Placement(
-                        currentOrderIndex,               
-                        currentPiece,                     
-                        currentOrientationIndex, 
-                        currentRow, 
-                        currentCol, 
-                        orientation
-                    ));
-                        
-                        currentOrderIndex++;
-                        currentOrientationIndex = 0;
-                        currentRow = 0;
-                        currentCol = 0;
-                        
-                        repaint();
-                        
-                        if (currentOrderIndex == pieceOrder.size()) {
-                            solutionFound = true;
-                            JOptionPane.showMessageDialog(this, "¡Solución encontrada!");
-                        }
-                        return;
-                    }
-                    currentCol++;
-                }
-                currentCol = 0;
-                currentRow++;
-            }
-            currentRow = 0;
-            currentOrientationIndex++;
+        if (!board.solvable()) {
+            backtrack();
+            return;
         }
 
-        backtrack();
+        // Falta la lógica del algoritmo
+
         repaint();
-
-        if (autoMode && !solutionFound) {
-            autoTimer.start();
-        }
-    }
-
-    private boolean tryPlacePiece(int row, int col, char[][] piece) {
-        if (board.placePiece(row, col, piece)) {
-            if (board.solvable()) {
-                return true;
-            }
-            board.unplacePiece(row, col, piece);
-        }
-        return false;
     }
 
     private void backtrack() {
-        if (!placementStack.isEmpty()) {
-            Placement last = placementStack.pop();
-            board.unplacePiece(last.row, last.col, last.orientation);
-            currentOrderIndex = last.orderIndex;  // Restaurar orderIndex
-            currentOrientationIndex = last.orientationIndex + 1;
-            currentRow = last.row;
-            currentCol = last.col;
-        } else {
-            JOptionPane.showMessageDialog(this, "No se encontró solución.");
-            solving = false;
+        if (!placed.isEmpty()) {
+            Piece lastPlaced = placed.pop();
+            board.unplacePiece(lastPlaced.getX(), lastPlaced.getY(), lastPlaced);
+            pieces.addPiece(lastPlaced);
         }
     }
 
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-        board.draw(g, 50, 50, cellSize, gutter);
+        board.draw(g, 2, 2, cellSize, gutter);
     }
 
     public int getBoardWidth() {
         return board.getWidth();
-    }
-
-    private class Placement {
-        int orderIndex;
-        int orientationIndex;
-        int row;
-        int col;
-        char[][] orientation;
-
-        public Placement(int orderIndex, int pieceIndex, int orientationIndex, int row, int col, char[][] orientation) {
-            this.orderIndex = orderIndex;
-            this.orientationIndex = orientationIndex;
-            this.row = row;
-            this.col = col;
-            this.orientation = orientation;
-        }
     }
 
     private void scheduleWindowAdjustment() {

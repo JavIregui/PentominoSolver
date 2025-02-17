@@ -50,17 +50,13 @@ public class App {
         
         JMenu solveMenu = new JMenu("Resolver");
         JMenuItem startItem = new JMenuItem("Iniciar solución");
-        JCheckBoxMenuItem autoModeItem = new JCheckBoxMenuItem("Modo automático");
+        JMenuItem stopItem = new JMenuItem("Parar solución");
         
         startItem.addActionListener(e -> app.startSolving());
-        autoModeItem.addItemListener(e -> {
-            app.setAutoMode(autoModeItem.isSelected());
-            if (autoModeItem.isSelected()) app.startSolving();
-        });
+        stopItem.addActionListener(e -> app.stopSolving());
         
         solveMenu.add(startItem);
-        solveMenu.addSeparator();
-        solveMenu.add(autoModeItem);
+        solveMenu.add(stopItem);
         menuBar.add(solveMenu);
         
         return menuBar;
