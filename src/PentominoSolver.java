@@ -17,7 +17,7 @@ public class PentominoSolver extends JPanel {
     private static final int RESIZE_DELAY_MS = 100;
 
     private Timer autoTimer;
-    private static final int AUTO_DELAY_MS = 250;
+    private static final int AUTO_DELAY_MS = 1000;
     private boolean solving;
 
     public PentominoSolver(int row, int col, int cellSize) {
@@ -75,27 +75,89 @@ public class PentominoSolver extends JPanel {
     }
 
     private void nextStep() {
+        // 1. Caso base: si ya no hay piezas por colocar, se encontró la solución.
         if (pieces.isEmpty()) {
             solving = false;
             autoTimer.stop();
             JOptionPane.showMessageDialog(this, "¡Solución encontrada!");
             return;
         }
-
+        
+        // 2. Verificamos si el estado actual del tablero es resolvible (heurística)
         if (!board.solvable()) {
             backtrack();
+            repaint();
             return;
         }
-
-        // Falta la lógica del algoritmo
-
+        
+        // 3. Buscamos la primera casilla vacía en el tablero.
+        int targetX = -1, targetY = -1;
+        boolean foundEmpty = false;
+        for (int y = 0; y < board.getHeight(); y++) {
+            for (int x = 0; x < board.getWidth(); x++) {
+                if (board.getGrid()[y][x] == '0') {  // Se asume que board.isEmpty(x, y) indica si la celda está libre
+                    targetX = x;
+                    targetY = y;
+                    foundEmpty = true;
+                    break;
+                }
+            }
+            if (foundEmpty) break;
+        }
+        
+        // Si por alguna razón el tablero está lleno, también es solución.
+        if (!foundEmpty) {
+            solving = false;
+            autoTimer.stop();
+            JOptionPane.showMessageDialog(this, "¡Solución encontrada!");
+            return;
+        }
+        
+        // 4. Intentamos colocar alguna de las piezas restantes en la casilla (targetX, targetY)
+        boolean placedPiece = false;
+        
+        // Recorremos la cola de piezas (suponiendo que podemos acceder a ellas por índice)
+        for (int i = 0; i < pieces.size(); i++) {
+            Piece currentPiece = pieces.getNextPiece();
+            int rotacionesIntentadas = 0;
+            int totalRotaciones = 8; // Por ejemplo, 8 (4 rotaciones + 4 del reflejo)
+            
+            // Se prueban todas las rotaciones posibles de la pieza
+            while (rotacionesIntentadas < totalRotaciones) {
+                if (board.placePiece(targetX, targetY, currentPiece.getShape())) {
+                    // Si la pieza cabe, se coloca en el tablero
+                    currentPiece.setPosition(targetX, targetY); // Guarda la posición en la pieza (si lo usas en backtracking)
+                    placed.push(currentPiece);
+                    placedPiece = true;
+                    break;  // Salimos del bucle de rotaciones
+                } else {
+                    currentPiece.nextRotation();  // Probamos la siguiente rotación/reflejo
+                    rotacionesIntentadas++;
+                }
+            }
+            
+            if (placedPiece) break;
+            else {
+                // Si no se pudo colocar la pieza, reiniciamos su rotación para intentos futuros
+                currentPiece.resetRotation();
+                pieces.addPiece(currentPiece);
+            }
+        }
+        
+        // 5. Si ninguna pieza pudo colocarse en la casilla encontrada, se hace backtracking.
+        if (!placedPiece) {
+            backtrack();
+        }
+        
         repaint();
     }
 
     private void backtrack() {
         if (!placed.isEmpty()) {
             Piece lastPlaced = placed.pop();
+            // Se quita la pieza del tablero utilizando su posición guardada
             board.unplacePiece(lastPlaced.getX(), lastPlaced.getY(), lastPlaced);
+            // Se devuelve la pieza a la cola para poder reintentarlo en otra posición
             pieces.addPiece(lastPlaced);
         }
     }

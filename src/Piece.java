@@ -58,4 +58,10 @@ public class Piece {
         x = 0;
         y = 0;
     }
+
+    public void resetRotation() {
+        currentVariant = 0;
+        piece = variants[currentVariant];
+        rotation = 0;
+    }
 }
